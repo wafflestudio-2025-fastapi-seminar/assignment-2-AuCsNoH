@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from fastapi import Depends, Cookie, Request
+from fastapi import Depends, Cookie, Request, status, Response
 
 from common.database import blocked_token_db, session_db, user_db
 
@@ -82,10 +82,52 @@ def verify_access_token(token: str) -> dict | None:
         return None
 
 
-@auth_router.delete("/token")
+@auth_router.delete("/token", status_code=status.HTTP_204_NO_CONTENT)
+def delete_token(request: Request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise UnauthenticatedException()
+    if not auth_header.startswith("Bearer "):
+        raise BadAuthorizationHeaderException()
+    token = auth_header.split(" ")[1]
+
+    payload = verify_access_token(token)
+    if not payload:
+        raise InvalidTokenException()
+
+    blocked_token_db[token] = payload["exp"]
+
+    return
 
 
 @auth_router.post("/session")
+def 세션로그인(data: LoginRequest, response: Response):
+    user = next((u for u in user_db if u["email"] == data.email), None)
+    if not user or not pwd_context.verify(data.password, user["hashed_password"]):
+        raise InvalidAccountException()
+
+    sid = str(uuid4())
+    session_db[sid] = {
+        "user_id": user["user_id"],
+        "expires_at": datetime.utcnow() + timedelta(minutes=LONG_SESSION_LIFESPAN)
+    }
+
+    response.set_cookie(
+        key="sid",
+        value=sid,
+        httponly=True,
+        max_age=LONG_SESSION_LIFESPAN*60
+    )
+
+    return
 
 
-@auth_router.delete("/session")
+@auth_router.delete("/session", status_code=status.HTTP_204_NO_CONTENT)
+def logout_session(response: Response, sid: str = Cookie(None)):
+    if sid and sid in session_db:
+        session_db.pop(sid)
+
+        response.delete_cookie("sid")
+
+    return
+    
