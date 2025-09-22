@@ -8,7 +8,7 @@ import jwt
 from datetime import datetime, timedelta
 
 from passlib.context import CryptContext
-from users.errors import (
+from src.users.errors import (
     InvalidAccountException,
     UnauthenticatedException,
     BadAuthorizationHeaderException,
