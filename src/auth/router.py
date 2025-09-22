@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends, Cookie, Request, status, Response
 
-from common.database import blocked_token_db, session_db, user_db
+from src.common.database import blocked_token_db, session_db, user_db
 
 from pydantic import BaseModel, EmailStr
 import jwt

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from tests.util import get_all_src_py_files_hash
 from src.api import api_router
-from common.custom_exception import CustomException
+from src.common.custom_exception import CustomException
 
 app = FastAPI()
 
