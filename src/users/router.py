@@ -50,11 +50,20 @@ def get_user_by_id(user_id: int) -> dict:
 
 def verify_access_token(token: str) -> dict | None:
     if token in blocked_token_db:
-        return None
+        raise InvalidTokenException()
     try:
-        return jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-    except jwt.PyJWTError:
-        return None
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None or not get_user_by_id(user_id):
+            raise InvalidTokenException()
+        return payload
+    except jwt.ExpiredSignatureError:
+        # 토큰 만료 예외 처리
+        raise InvalidTokenException()
+    except jwt.InvalidTokenError:
+        # 기타 잘못된 토큰 예외 처리
+        raise InvalidTokenException()
+
 
 
 @user_router.post("/", status_code=status.HTTP_201_CREATED)
@@ -83,6 +92,8 @@ def get_user_info(request: Request):
         if not session or session_expired(session):
             raise InvalidSessionException()
         user = get_user_by_id(session["user_id"])
+        if not user:
+            raise InvalidSessionException()
         return UserResponse(**user)
 
     
@@ -95,6 +106,8 @@ def get_user_info(request: Request):
         if not payload:
             raise InvalidTokenException()  # ERR_008
         user = get_user_by_id(payload["sub"])  # sub claim에서 user_id 가져오기
+        if not user:
+            raise InvalidSessionException()
         return UserResponse(**user)
 
     raise UnauthenticatedException()
