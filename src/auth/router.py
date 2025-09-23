@@ -15,6 +15,8 @@ from src.users.errors import (
     InvalidTokenException
 )
 
+from uuid import uuid4
+
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
 SHORT_SESSION_LIFESPAN = 15
@@ -77,7 +79,7 @@ def verify_access_token(token: str) -> dict | None:
     if token in blocked_token_db:
         return None
     try:
-        return jwt.decode(token, JWT_SECRET_KEY, algorithm=["HS256"])
+        return jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
     except jwt.PyJWTError:
         return None
 
