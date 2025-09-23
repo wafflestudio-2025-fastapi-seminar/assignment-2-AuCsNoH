@@ -27,7 +27,7 @@ def handle_custom_exception(request: Request, exc: CustomException):
         status_code=exc.status_code,
         content={
             "error_code": exc.error_code,
-            "error_message": exc.error_message
+            "error_msg": exc.error_msg
         }
 
     )
