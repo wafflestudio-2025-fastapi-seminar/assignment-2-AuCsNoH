@@ -41,12 +41,12 @@ def login_for_tokens(data: LoginRequest):
 
 def create_access_token(user_id: int):
     expire = datetime.now(timezone.utc) + timedelta(minutes=SHORT_SESSION_LIFESPAN)
-    payload = {"sub": user_id, "exp": expire}
+    payload = {"sub": str(user_id), "exp": expire}
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm="HS256")
 
 def create_refresh_token(user_id: int):
     expire = datetime.now(timezone.utc) + timedelta(minutes=LONG_SESSION_LIFESPAN)
-    payload = {"sub": user_id, "exp": expire}
+    payload = {"sub": str(user_id), "exp": expire}
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm="HS256")
 
 
@@ -68,7 +68,7 @@ def refresh_token(request: Request):
 
     blocked_token_db[token] = payload["exp"]
 
-    user_id = payload["sub"]
+    user_id = int(payload["sub"])
     new_access_token = create_access_token(user_id)
     new_refresh_token = create_refresh_token(user_id)
 

@@ -53,7 +53,7 @@ def verify_access_token(token: str) -> dict | None:
         raise InvalidTokenException()
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        user_id = payload.get("sub")
+        user_id = int(payload.get("sub"))
         if user_id is None or not get_user_by_id(user_id):
             raise InvalidTokenException()
         return payload
@@ -105,7 +105,7 @@ def get_user_info(request: Request):
         payload = verify_access_token(token)  # JWT 디코드/검증
         if not payload:
             raise InvalidTokenException()  # ERR_008
-        user = get_user_by_id(payload["sub"])  # sub claim에서 user_id 가져오기
+        user = get_user_by_id(int(payload["sub"]))  # sub claim에서 user_id 가져오기
         if not user:
             raise InvalidSessionException()
         return UserResponse(**user)
