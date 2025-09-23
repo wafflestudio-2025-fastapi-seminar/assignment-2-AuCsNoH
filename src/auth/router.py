@@ -5,7 +5,7 @@ from src.common.database import blocked_token_db, session_db, user_db
 
 from pydantic import BaseModel, EmailStr
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 from passlib.context import CryptContext
 from src.users.errors import (
@@ -40,12 +40,12 @@ def login_for_tokens(data: LoginRequest):
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 def create_access_token(user_id: int):
-    expire = datetime.utcnow() + timedelta(minutes=SHORT_SESSION_LIFESPAN)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=SHORT_SESSION_LIFESPAN)
     payload = {"sub": user_id, "exp": expire}
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm="HS256")
 
 def create_refresh_token(user_id: int):
-    expire = datetime.utcnow() + timedelta(minutes=LONG_SESSION_LIFESPAN)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=LONG_SESSION_LIFESPAN)
     payload = {"sub": user_id, "exp": expire}
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm="HS256")
 
@@ -111,7 +111,7 @@ def 세션로그인(data: LoginRequest, response: Response):
     sid = str(uuid4())
     session_db[sid] = {
         "user_id": user["user_id"],
-        "expires_at": datetime.utcnow() + timedelta(minutes=LONG_SESSION_LIFESPAN)
+        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=LONG_SESSION_LIFESPAN)
     }
 
     response.set_cookie(
